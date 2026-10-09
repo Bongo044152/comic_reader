@@ -1,0 +1,7 @@
+services:
+  backend:
+    build: .
+    image: comic-backend
+    ports:
+      - "5090:5090"
+    user: "1000:1000"
