@@ -1,7 +1,5 @@
 FROM node:jod-trixie-slim
 
-RUN apt-get update && apt-get install -y curl iproute2
-
 WORKDIR /app
 COPY app /app
 RUN chown -R node:node /app
