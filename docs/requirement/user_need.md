@@ -1,7 +1,5 @@
 # Suwayomi 使用者需求（User Needs）
 
-Sep 27, 2026 · @Bongo
-
 # 背景
 
 「接案社」是由東華資工系成立的接案子社團

@@ -1,7 +1,5 @@
 # 開發文件 V1
 
-Oct 3, 2026 · @Bongo
-
 > 文件分成「主章節」與「附屬章節」：主章節（`N.`）介紹該章的範圍與總覽，附屬章節（`N.M`）逐項詳細描述。
 >
 > 第 3 章的詳細內容在 [frontend.md](frontend.md)，第 4 章在 [data.md](data.md)，第 5 章在 [api.md](api.md)。
