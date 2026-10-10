@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  color: #29291f;
+  background: #f7f5f0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+button, a { font: inherit; }
+.page-shell { width: min(1120px, calc(100% - 64px)); min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; }
+.topbar { height: 88px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e4db; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; font-size: 18px; font-weight: 800; text-decoration: none; letter-spacing: .08em; }
+.brand-mark { width: 34px; height: 34px; display: grid; place-items: center; color: #fffdf8; background: #d36f4e; border-radius: 10px 10px 10px 3px; font-size: 16px; }
+.topbar-note { color: #969187; font-size: 13px; letter-spacing: .06em; }
+.welcome-card { position: relative; flex: 1; min-height: 540px; margin: 40px 0 24px; padding: clamp(36px, 7vw, 88px); overflow: hidden; display: flex; align-items: center; background: #eeece4; border-radius: 22px; }
+.welcome-copy { position: relative; z-index: 2; max-width: 510px; }
+.eyebrow { margin: 0 0 22px; color: #d36f4e; font-size: 11px; font-weight: 700; letter-spacing: .2em; }
+h1 { margin: 0; font-size: clamp(36px, 5vw, 58px); font-weight: 800; line-height: 1.35; letter-spacing: -.06em; }
+h1 span { color: #77746b; }
+.description { max-width: 390px; margin: 20px 0 30px; color: #77746b; font-size: 15px; line-height: 1.9; }
+.check-button { min-height: 48px; padding: 0 19px; display: inline-flex; align-items: center; gap: 26px; color: #fffdf8; background: #d36f4e; border: 0; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s, transform .2s; }
+.check-button:hover:not(:disabled) { background: #bd5c3d; transform: translateY(-2px); }
+.check-button:disabled { opacity: .7; cursor: wait; }
+.check-button span { font-size: 18px; }
+.api-result { margin: 14px 0 0; font-size: 13px; }
+.api-result.success { color: #397454; }
+.api-result.error { color: #b84d3a; }
+.book-art { position: absolute; inset: 0 0 0 54%; }
+.sun { position: absolute; width: 280px; height: 280px; top: 50%; left: 54%; transform: translate(-50%, -50%); background: #e4c58e; border-radius: 50%; opacity: .72; }
+.book { position: absolute; top: 50%; left: 54%; width: 190px; height: 275px; border-radius: 4px 12px 12px 4px; box-shadow: 18px 20px 30px #53453227; }
+.book-back { transform: translate(-20%, -48%) rotate(10deg); background: #75816c; color: #f7f0df; display: flex; justify-content: flex-end; align-items: flex-end; padding: 18px; font-size: 11px; font-weight: 700; letter-spacing: .12em; line-height: 1.5; }
+.book-front { transform: translate(-69%, -51%) rotate(-8deg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between; color: #fff7e8; background: #cc7457; border-left: 8px solid #b86148; }
+.book-label { font-size: 9px; letter-spacing: .18em; }
+.book-title { font-size: 29px; font-weight: 800; line-height: 1.45; letter-spacing: .06em; }
+.book-line { width: 38px; height: 2px; background: #f1c58e; }
+.spark { position: absolute; color: #c18445; }
+.spark-one { top: 23%; left: 27%; font-size: 32px; }
+.spark-two { top: 72%; left: 78%; font-size: 24px; }
+.page-footer { min-height: 58px; display: flex; justify-content: space-between; align-items: center; color: #a19c91; font-size: 11px; letter-spacing: .05em; }
+
+@media (max-width: 760px) {
+  .page-shell { width: min(100% - 32px, 560px); }
+  .topbar { height: 70px; }
+  .topbar-note { font-size: 11px; }
+  .welcome-card { min-height: 680px; margin-top: 20px; padding: 34px 26px; align-items: flex-start; }
+  .description { max-width: 330px; font-size: 14px; }
+  .book-art { inset: 270px 0 0; }
+  .sun { width: 220px; height: 220px; left: 55%; }
+  .book { width: 145px; height: 210px; left: 55%; }
+  .book-front { padding: 17px; border-left-width: 6px; }
+  .book-title { font-size: 23px; }
+}
+
+@media (max-width: 400px) {
+  .page-shell { width: calc(100% - 24px); }
+  .welcome-card { padding-inline: 21px; }
+  .page-footer { font-size: 9px; }
+}
