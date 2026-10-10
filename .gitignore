@@ -1,0 +1,12 @@
+
+# Environment variables (may contain secrets)
+.env
+
+# Installed npm dependencies
+node_modules
+
+# Local development files
+*.dev
+
+# TypeScript build output
+dist
