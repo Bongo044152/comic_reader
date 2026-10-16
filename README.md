@@ -12,10 +12,10 @@
 
 ## 驗收標準
 
-- [ ] `docker compose up --build` 能一次啟動前端與後端，沒有錯誤
-- [ ] 直接對後端發 GET 請求，回傳 hello world
-- [ ] 瀏覽器開啟前端頁面，畫面顯示來自後端的 hello world（不是前端寫死的字串）
-- [ ] `docker compose down` 能乾淨關閉
+- [x] `docker compose up --build` 能一次啟動前端與後端，沒有錯誤
+- [x] 直接對後端發 GET 請求，回傳 hello world
+- [x] 瀏覽器開啟前端頁面，畫面顯示來自後端的 hello world（不是前端寫死的字串）
+- [x] `docker compose down` 能乾淨關閉
 
 ## 範圍
 

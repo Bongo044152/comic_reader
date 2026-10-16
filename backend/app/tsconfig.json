@@ -2,7 +2,7 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "removeComments": true,
     "noEmitOnError": true,
@@ -49,6 +49,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  // rootDir 是 ./src，只編譯 src 底下的檔案
-  "include": ["src"]
+  // rootDir 下的目錄
+  "include": ["src", "utils"]
 }

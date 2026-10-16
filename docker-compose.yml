@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    image: comic-backend
+    ports:
+      - "5090:5090"     # host:container, the container side must match environment.PORT
+    user: "1000:1000"
+
+    # see: https://docs.docker.com/reference/compose-file/services/#logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "25m"
+    environment:
+      PORT: "5090"      # port the backend listens on inside the container (default: 5090)
+      LOG_LEVEL: "info" # backend logging level (default: info): https://getpino.io/#/docs/api?id=loggerlevel-string-gettersetter
+  frontend:
+    build: ./frontend
+    image: comic-frontend
+    ports:
+      - "5173:5173"     # Vite dev server
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      # Required, no default. The Vite proxy forwards /api from inside this container,
+      # so `localhost` would point to the frontend itself. Use the service name and the
+      # container-side port, which must match backend's environment.PORT.
+      VITE_PROXY_TARGET: "http://backend:5090"
