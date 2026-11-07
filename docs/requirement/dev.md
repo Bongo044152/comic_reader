@@ -84,7 +84,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 - Frontend 只經由 Backend 取資料（REST API）；Backend Management 是 CLI，主要與 Backend 互動，功能待定（Q-V2）。
 - Backend 與 plugin 在同一個 Docker network；plugin 啟動後向 Backend 註冊，Backend 以 HTTP 呼叫 plugin。
-- 只有 Backend 存取 Database（選型待定，data.md 的 Q-D1）。
+- 只有 Backend 存取 Database（SQLite）。
 - Backend 只讀 File Storage；plugin 只直接讀寫自己來源的目錄，圖片不經過 Backend 傳輸。
 - plugin 向 External Websites 發出請求。
 - Suwayomi api 尚未確認，圖中的 Plugin A/B/C 先代表任意一個 plugin container。
@@ -159,7 +159,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 ### 4.1 資料庫選型與共通規則
 
-資料庫選型尚未決定，見 [data.md](data.md) 的 Q-D1。共通的設計（surrogate id、連帶刪除的規則等）已寫在 data.md 各資料卡。
+資料庫使用 SQLite。共通的設計（surrogate id、連帶刪除的規則等）已寫在 data.md 各資料卡。
 
 ## 5. 後端 API
 
