@@ -19,9 +19,9 @@
 
 - 大 blob 會經過 buffer pool 與 WAL，拖慢備份。
 - 讀圖得經過資料庫連線；檔案系統可以直接 `sendfile`。
-- 快取淘汰只要 `unlink`；資料庫需要 `DELETE` 加 vacuum。
+- 刪檔只要 `unlink`；資料庫需要 `DELETE` 加 vacuum。
 
-資料庫完全不記錄圖片的任何資訊（路徑、頁數、大小）。圖片存不存在、完不完整由檔案系統決定，路徑由 Manga 與 Chapter 的欄位組出。好處是沒有「兩邊要一起刪、對不上」的問題；唯一的單向情況是資料庫記錄被刪後，留下沒人引用的檔案，留給淘汰清理。
+資料庫完全不記錄圖片的任何資訊（路徑、頁數、大小）。圖片存不存在、完不完整由檔案系統決定，路徑由 Manga 與 Chapter 的欄位組出。好處是沒有「兩邊要一起刪、對不上」的問題；唯一的單向情況是資料庫記錄被刪後，留下沒人引用的檔案，留給日後清理（Q-D11）。
 
 另外有兩筆**運行時狀態**不屬於這兩種：登入狀態與 Plugin registry。它們不是要長期保存的內容，集中在第 5 章說明。
 
@@ -110,7 +110,7 @@
 
 **關聯**：一對多 Folder。
 
-**生命週期**：由管理者建立；V1 不更新（修改密碼待補）；刪除時 Folder、FolderManga 連帶刪除，並刪除該使用者的 `scratch` 目錄。
+**生命週期**：由管理者建立；V1 不更新（修改密碼待補）；刪除時 Folder、FolderManga 連帶刪除。
 
 **一致性**：`username` 唯一；帳號建立時由 Backend 同時建立該使用者的預設資料夾（書庫）。
 
@@ -224,7 +224,7 @@
 | 欄位 | 型別 | 必填 | 說明 |
 | --- | --- | --- | --- |
 | `id` | 整數 | 是 | surrogate id，供資料庫內部外鍵 |
-| `source_id` | 字串 | 是 | 來源（plugin / 網站），如 `mangadex` |
+| `source_id` | 字串 | 是 | 來源識別，如 `mangadex`。目前與 plugin 一對一，值等於該 plugin 的 id |
 | `remote_id` | 字串 | 是 | 漫畫在該來源上的 ID |
 | `title` | 字串 | 是 | 漫畫名稱 |
 | `cover_url` | 字串 | 是 | 封面網址 |
@@ -316,37 +316,37 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 已加入的漫畫 | `/data/{source}/library/{遠端漫畫 id}/{遠端章節 id}/` |
-| 未加入的漫畫 | `/data/{source}/scratch/{userId}/{遠端漫畫 id}/{遠端章節 id}/` |
+| 已加入的漫畫（ref count > 0） | `/data/{source}/library/{遠端漫畫 id}/{遠端章節 id}/` |
 | 頁面檔 | 按頁碼命名，如 `001.jpg` |
 | 完成標記 | 章節目錄中的 `manifest.json`，最後寫入 |
 
-唯一鍵：路徑本身。路徑由 `Manga.source_id`、`Manga.remote_id`、`Chapter.remote_id` 組出，不使用資料庫 id，所以漫畫進資料庫之前圖片就能寫入（系統允許閱讀未加入的漫畫）。
+沒有人加入的漫畫，系統不保存圖片；閱讀時的圖片由 plugin 提供（plugin 的快取屬實作細節，不在此定義）。
+
+唯一鍵：路徑本身。路徑由 `Manga.source_id`、`Manga.remote_id`、`Chapter.remote_id` 組出，不使用資料庫 id，檔案位置不依賴資料庫。
 
 例子：`Manga(id=42, source_id=mangadex, remote_id=a1b2c3)` 第 778 話第 1 頁，路徑是 `/data/mangadex/library/a1b2c3/778/001.jpg`，路徑裡沒有 42。第一層是否為來源、目錄名編碼待定（Q-D6）。
 
 **獲取**：plugin 向來源網站抓取，直接寫入共享 volume，不經過 Backend。
 
-**存取**：檔案系統。plugin 只掛自己的來源目錄（讀寫）；Backend 掛整個根目錄，讀取並服務圖片，淘汰時 `unlink`。寫入目標由 Backend 決定：ref count > 0 寫 `library`，否則寫該使用者的 `scratch`。
+**存取**：檔案系統。plugin 只掛自己的來源目錄（讀寫）；Backend 掛整個根目錄，讀取並服務圖片，清理時 `unlink`。只有漫畫已被任何人加入（ref count > 0）時，抓到的章節才寫入 `library`；沒有人加入時系統不保存圖片。
 
 **關聯**：沒有資料庫外鍵，與 Manga、Chapter 的關係只在路徑。
 
 **生命週期**
-- 建立：使用者載入章節且未命中快取時，由 plugin 抓取；寫到同一 mount 內的 `.tmp-*`，完成後 `rename()`，最後寫入 `manifest.json`。
+- 建立：漫畫已被加入、使用者載入章節且 `library` 沒有這章時，由 plugin 抓取；寫到同一 mount 內的 `.tmp-*`，完成後 `rename()`，最後寫入 `manifest.json`。
 - 更新：強制刷新；檔案不原地修改，只用新檔取代。
-- 刪除：`scratch` 每位使用者只保留最近 5 章，超過刪最舊的；刪除帳號時刪除該使用者的 `scratch`；ref count 歸零只刪資料庫記錄，`library` 的檔案留給淘汰清理。
+- 刪除：ref count 歸零只刪資料庫記錄，`library` 的檔案留給日後清理（Q-D11）。
 
 **一致性**：`manifest.json` 存在才代表完整；同一章被多人同時請求時要避免重複下載（見 `dev.md` 備忘「爭奪問題」）；章節是一組檔案，目錄層級的原子性靠 `.tmp-*` 加 `rename()`，同一個 mount。
 
-**敏感度**：`scratch` 是使用者私有，`library` 全體共用。
+**敏感度**：`library` 全體共用。
 
 **權限**
 - 寫：只有 plugin，且只能寫自己的來源目錄。
-- 讀：使用者只能經 Backend 的 API 讀；`library` 所有已登入的使用者可讀，`scratch` 只給屬主本人（以登入狀態比對）。
-- 刪：只有 Backend（淘汰、刪除帳號時），使用者與 plugin 不能刪。
+- 讀：使用者只能經 Backend 的 API 讀；`library` 所有已登入的使用者可讀。
+- 刪：只有 Backend（清理時），使用者與 plugin 不能刪。
 
 **規模**
-- `scratch`：有界，每位使用者只保留最近 5 章。
 - `library`：有界，但是唯一會大量佔用磁碟的資料。上限寫在設定檔，超過上限時寫入失敗。設定檔可以透過 Backend Management 修改，也可以直接編輯。
 
 ---

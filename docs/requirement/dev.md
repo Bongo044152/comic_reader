@@ -54,7 +54,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 | 書庫與資料夾分類（A-5、C-1） | [F-05](frontend.md#f-05-書庫列表)、[F-06](frontend.md#f-06-資料夾管理)、[F-07](frontend.md#f-07-資料夾內文)、[F-08](frontend.md#f-08-加入移出資料夾) | 完整 | — |
 | 移除漫畫（C-7） | [F-09](frontend.md#f-09-移除漫畫) | 完整 | — |
 | 漫畫詳情與同步（A-7、C-4） | [F-10](frontend.md#f-10-漫畫詳情)、[F-11](frontend.md#f-11-同步詳情)、[F-12](frontend.md#f-12-同步章節) | 完整 | — |
-| 圖片儲存與快取（A-8） | [F-13](frontend.md#f-13-閱讀章節) | 完整 | — |
+| 圖片儲存（A-8） | [F-13](frontend.md#f-13-閱讀章節) | 完整 | — |
 | 手機版（A-11） | — | 後續 | — |
 
 ### 1.4 Plugin 與 Backend Management
@@ -85,7 +85,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - Frontend 只經由 Backend 取資料（REST API）；Backend Management 是 CLI，主要與 Backend 互動，功能待定（Q-V2）。
 - Backend 與 plugin 在同一個 Docker network；plugin 啟動後向 Backend 註冊，Backend 以 HTTP 呼叫 plugin。
 - 只有 Backend 存取 Database（SQLite）。
-- Backend 只讀 File Storage；plugin 只直接讀寫自己來源的目錄，圖片不經過 Backend 傳輸。
+- Backend 可讀寫 File Storage（讀取並服務圖片、清理時 `unlink`）；plugin 只直接讀寫自己來源的目錄，圖片不經過 Backend 傳輸。
 - plugin 向 External Websites 發出請求。
 - Suwayomi api 尚未確認，圖中的 Plugin A/B/C 先代表任意一個 plugin container。
 
@@ -95,9 +95,9 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 | --- | --- | --- | --- |
 | Frontend | 使用者介面與操作 | 登入、書庫、搜尋、資料夾、詳情、手動同步、閱讀；載入動畫、錯誤提示 | 業務邏輯、直接存取 Database 或 plugin |
 | Backend Management | 管理者的入口，預期為 CLI | 建立與刪除帳號、plugin 管理、修改設定檔；範圍待定（Q-V2） | 待定 |
-| Backend | 唯一的業務邏輯層，統一對外 API | 帳號驗證與權限、書庫與資料夾、本地搜尋與 plugin 搜尋、手動同步與衝突偵測、圖片快取、plugin 註冊與生命週期管理、錯誤 log | 渲染畫面、爬取來源網站 |
+| Backend | 唯一的業務邏輯層，統一對外 API | 帳號驗證與權限、書庫與資料夾、本地搜尋與 plugin 搜尋、手動同步與衝突偵測、圖片服務、plugin 註冊與生命週期管理、錯誤 log | 渲染畫面、爬取來源網站 |
 | Database | 結構化資料 | User、Folder、FolderManga、Manga、Chapter | 圖片檔案 |
-| File Storage | 章節圖片與快取，以漫畫 id 共用 | plugin 直接寫入各自的來源目錄、Backend 讀取並服務圖片 | 圖片以外的資料 |
+| File Storage | 章節圖片，以漫畫 id 共用 | plugin 直接寫入各自的來源目錄、Backend 讀取並服務圖片 | 圖片以外的資料 |
 | Plugin System | 每個 plugin 一個 Docker container，與來源網站溝通，啟動後向 Backend 註冊 | 搜尋、漫畫資訊、章節列表、章節圖片（直接寫檔）、註冊（V1 只檢查來源 IP）、可辨識的錯誤回報 | 存取 Database、使用者資料 |
 | External Websites | 漫畫來源 | — | — |
 
@@ -112,7 +112,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 | 加入 | 把漫畫放進自己的書庫 |
 | 同步 | 向來源網站取得最新的資料，分成詳情同步與章節同步，見 3.1 |
 | ref count | 有多少位使用者把這部漫畫放在書庫，歸零才回收共用的漫畫資料 |
-| library、scratch | 章節圖片的兩個目錄：已加入的漫畫放 `library`，全體共用；未加入的放 `scratch`，使用者私有 |
+| library | 章節圖片的永久儲存目錄：漫畫已被加入（ref count 大於 0）時，抓到的章節寫入這裡，全體共用；沒有人加入的漫畫，系統不保存圖片 |
 
 ### 2.4 設計規模
 
@@ -140,7 +140,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - 使用者進入詳情頁有三種狀態：
   - 正常操作：本地詳情加本地章節，提供同步詳情、同步章節按鈕。
   - 本地搜尋：從本地取漫畫列表，進入詳情頁。
-  - 遠端（plugin）搜尋：從遠端取漫畫列表，進入詳情頁時額外向遠端取詳情，再取本地詳情與本地章節。
+  - 遠端（plugin）搜尋：從遠端取漫畫列表，進入詳情頁時向遠端取詳情（不由本人寫入；已有人加入時由後端依規則更新），沒有章節列表。已在書庫的漫畫則與正常操作相同。
 - 前端取遠端資料要有顆粒度，例如不要一次要很多章節。
 - 前端保留實作空間，例如未來的「一鍵同步」就是詳情加章節。
 - 對應功能：[F-04](frontend.md#f-04-加入書庫)、[F-09](frontend.md#f-09-移除漫畫)、[F-10](frontend.md#f-10-漫畫詳情)、[F-11](frontend.md#f-11-同步詳情)、[F-12](frontend.md#f-12-同步章節)。
@@ -163,7 +163,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 ## 5. 後端 API
 
-這一章只定義 Frontend 與 Backend 之間的 API，共 21 支，涵蓋前端功能 F-01 到 F-14；Backend 與 plugin 之間的 API 晚一點再寫。
+這一章只定義 Frontend 與 Backend 之間的 API，共 19 支，涵蓋前端功能 F-01 到 F-14；Backend 與 plugin 之間的 API 晚一點再寫。
 
 詳細內容在 [api.md](api.md)：
 
@@ -214,21 +214,14 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - 圖片由 plugin 直接寫入共享 volume，不經過 Backend 傳輸。目錄以「來源網站」為 key，plugin 可以換，檔案佈局不變。
 - Database 只由 Backend 管，plugin 不碰。plugin 只回傳 JSON 和寫圖片。隔離靠「沒有掛載給 plugin」達成，只用一個 Docker network。
 - 競爭問題的兩種解法互補：`rename()` 管可見性，檔案鎖或 Backend in-flight 去重管重複工作。
-- `scratch` 的「最近 5 章」以讀取時 `touch` 記錄的時間判斷，不依賴 `atime`；總量是使用者數乘以 5 章，有界，不需要另外的淘汰規則。
-
-可選的最佳化（改 plugin 的邏輯即可）：
-
-- 共用 `scratch`：寫入前先查其他使用者是否已有這一章，有就用硬連結（`link(2)`，`i_nlink` 加 1，不複製資料）。前提：同一個 mount（跨 mount 會 `EXDEV`）、只能連結檔案不能連結目錄、檔案不原地修改。
-- 加入書庫時，把已在 `scratch` 的章節用 `rename()` 或硬連結移到 `library`，省一次重抓。
-
 太早討論，待後續深挖：
 
 - **章節是一組檔案**：單檔 `rename()` 原子，但一章多頁需要目錄層級的原子。強制刷新無法原子覆蓋非空目錄，可用版本目錄加 symlink 切換，或以 manifest 當完成標記（檔案存在不代表完整）。
 - **重複工作**：同一章兩個請求同時觸發會下載兩次，打到來源網站（C-4）。
 - **繞過 Backend 寫入後失去控制**：空間上限（C-6）放在 plugin 寫入時攔截不到，需要先檢查額度或用 quota；圖片驗證（magic bytes、Content-Type 由 Backend 決定）；檔名由規則決定。
 - **crash 與 container 被停**：`.tmp-*` 孤兒清理；有進行中寫入時不能 stop，與休息機制相關。
-- **實作細節**：`rename()` 不能跨 filesystem（EXDEV），暫存目錄要在同一個 mount；rootless Docker 的 bind mount uid 對應；fsync 持久性（快取可重建）。
-- plugin 只掛自己的來源目錄（read-write），Backend 掛整個根目錄，需要 read-write（快取淘汰要 `unlink`）。
+- **實作細節**：`rename()` 不能跨 filesystem（EXDEV），暫存目錄要在同一個 mount；rootless Docker 的 bind mount uid 對應；fsync 持久性（圖片可重新抓取）。
+- plugin 只掛自己的來源目錄（read-write），Backend 掛整個根目錄，需要 read-write（清理要 `unlink`）。
 - 尚未確定：使用者直覺中還有沒考慮到的部分。
 
 ### 6.6 Docker 網路與註冊端點
@@ -251,7 +244,7 @@ Backend 是 Node.js 單一 event loop，兩個 listener 共用同一個 thread�
 
 擔心的爭奪場景分三類：
 
-- **兩個使用者**：同時要同一章、同時強制刷新、一人閱讀時另一人觸發同步、同時加入與移除同一部漫畫（ref count 歸零時的 check-then-act）。漫畫資料與快取是全體共用的。
+- **兩個使用者**：同時要同一章、同時強制刷新、一人閱讀時另一人觸發同步、同時加入與移除同一部漫畫（ref count 歸零時的 check-then-act）。漫畫資料與 `library` 圖片是全體共用的。
 - **使用者和 plugin**：user 在 3000 讀 registry，plugin 在 3001 註冊、重起、移除；使用者讀圖時 plugin 正在寫同一章。
 - **外部資料存取**：同時對來源網站發太多請求被封鎖（C-4）、同一部漫畫被同時同步、外部資料回來時本地狀態已經變（例如漫畫已被移除）。
 
