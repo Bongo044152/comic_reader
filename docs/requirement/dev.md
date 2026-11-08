@@ -8,7 +8,7 @@
 
 V1 要涵蓋哪些 User Need、由哪些功能提供、做到什麼程度。想了解前端的功能，讀 [frontend.md 的總覽](frontend.md#1-總覽) 就足夠，需要細節再看各功能卡。
 
-以下內容主要描述 User Need 對應 V1 的參考資訊，方便核對用。
+以下是 User Need 與 V1 功能的對照，供核對用。
 
 支援程度分三種：
 
@@ -20,9 +20,9 @@ V1 要涵蓋哪些 User Need、由哪些功能提供、做到什麼程度。想�
 
 ### 1.1 主流程
 
-V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程需要的部分：
+V1 的最小範圍是讓一條主流程能跑通，各模組只負責這條流程需要的部分：
 
-1. 管理者發配帳號、安裝 plugin（Backend Management）。
+1. 管理者建立帳號、安裝 plugin（Backend Management）。
 2. 使用者登入（[F-01](frontend.md#f-01-登入登出)）。
 3. 用 plugin 搜尋漫畫（[F-03](frontend.md#f-03-plugin-搜尋)）。
 4. 加入書庫（[F-04](frontend.md#f-04-加入書庫)），整理到資料夾（[F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾)）。
@@ -49,9 +49,9 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 | 需求 | 功能 | 支援程度 | V1 做到哪 |
 | --- | --- | --- | --- |
-| 多人帳號：管理者發配、使用者登入（A-1、A-13） | [F-01](frontend.md#f-01-登入登出) | 完整 | — |
+| 多人帳號：管理者建立、使用者登入（A-1、A-13） | [F-01](frontend.md#f-01-登入登出) | 完整 | — |
 | 搜尋與加入新漫畫：本地搜尋與 plugin 搜尋（A-6、A-12） | [F-02](frontend.md#f-02-本地搜尋)、[F-03](frontend.md#f-03-plugin-搜尋)、[F-04](frontend.md#f-04-加入書庫) | 完整 | — |
-| 書庫與資料夾分類（A-5、C-1） | [F-05](frontend.md#f-05-書庫列表)、[F-06](frontend.md#f-06-資料夾管理)、[F-07](frontend.md#f-07-資料夾內文)、[F-08](frontend.md#f-08-加入移出資料夾) | 完整 | — |
+| 書庫與資料夾分類（A-5、C-1） | [F-05](frontend.md#f-05-書庫列表)、[F-06](frontend.md#f-06-資料夾管理)、[F-07](frontend.md#f-07-資料夾內容)、[F-08](frontend.md#f-08-加入移出資料夾) | 完整 | — |
 | 移除漫畫（C-7） | [F-09](frontend.md#f-09-移除漫畫) | 完整 | — |
 | 漫畫詳情與同步（A-7、C-4） | [F-10](frontend.md#f-10-漫畫詳情)、[F-11](frontend.md#f-11-同步詳情)、[F-12](frontend.md#f-12-同步章節) | 完整 | — |
 | 圖片儲存（A-8） | [F-13](frontend.md#f-13-閱讀章節內漫畫圖片) | 完整 | — |
@@ -74,7 +74,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 ## 2. Top View
 
-這一章說明系統由哪些模塊組成、模塊之間怎麼連線，以及全文共用的名詞與前提。
+這一章說明系統由哪些模組組成、模組之間怎麼連線，以及全文共用的名詞與前提。
 
 ### 2.1 架構圖
 
@@ -87,11 +87,11 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - 只有 Backend 存取 Database（SQLite）。
 - Backend 可讀寫 File Storage（讀取並服務圖片、清理時 `unlink`）；plugin 只直接讀寫自己來源的目錄，圖片不經過 Backend 傳輸。
 - plugin 向 External Websites 發出請求。
-- Suwayomi api 尚未確認，圖中的 Plugin A/B/C 先代表任意一個 plugin container。
+- Suwayomi API 尚未確認，圖中的 Plugin A/B/C 先代表任意一個 plugin container。
 
-### 2.2 模塊
+### 2.2 模組
 
-| 模塊 | 角色 | V1 最小功能 | 不負責 |
+| 模組 | 角色 | V1 最小功能 | 不負責 |
 | --- | --- | --- | --- |
 | Frontend | 使用者介面與操作 | 登入、書庫、搜尋、資料夾、詳情、手動同步、閱讀；載入動畫、錯誤提示 | 業務邏輯、直接存取 Database 或 plugin |
 | Backend Management | 管理者的入口，預期為 CLI | 建立與刪除帳號、plugin 管理、修改設定檔；範圍待定（Q-V2） | 待定 |
@@ -110,7 +110,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 | 來源 | 漫畫所在的網站，每個來源對應一個 plugin，以 `source_id` 識別 |
 | 漫畫 id | 來源加上漫畫在該來源上的 ID（`source_id` 與 `remote_id`），同名漫畫不同來源視為不同條目 |
 | 加入 | 把漫畫放進自己的書庫 |
-| 同步 | 向來源網站取得最新的資料，分成詳情同步與章節同步，見 3.1 |
+| 同步 | 向來源網站取得最新的資料，分成詳情同步與章節同步，見 3.1。需求中的「檢查更新」（UN-5）就是使用者手動觸發的同步 |
 | ref count | 有多少位使用者把這部漫畫放在書庫，歸零才回收共用的漫畫資料 |
 | library | 章節圖片的永久儲存目錄：漫畫已被加入（ref count 大於 0）時，抓到的章節寫入這裡，全體共用；沒有人加入的漫畫，系統不保存圖片 |
 
@@ -147,7 +147,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 ## 4. 資料庫、資料
 
-資料依特性分兩種方式管理，metadata 放資料庫，圖片等二進位資料放檔案系統。資料庫裡的資料再分成使用者相關（User、Folder、FolderManga）與漫畫資料（共用，Manga、Chapter）兩類。登入狀態與 Plugin registry 是運行時狀態，不長期保存。
+資料依特性分兩種方式管理，metadata 放資料庫，圖片等二進位資料放檔案系統。資料庫裡的資料再分成使用者相關（User、Folder、FolderManga）與漫畫資料（共用，Manga、Chapter）兩類。登入狀態與 Plugin registry 是執行期狀態，不長期保存。
 
 詳細內容在 [data.md](data.md)：
 
@@ -155,7 +155,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - 使用者相關資料（2）
 - 漫畫資料（3）
 - 章節圖片（4）
-- 運行時狀態（5）
+- 執行期狀態（5）
 
 ### 4.1 資料庫選型與共通規則
 
@@ -189,7 +189,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 - Plugin System 是一個小型 Docker 網路：一個 backend container 加最多約 10 個 plugin container。
 - 原因：每個 plugin 的撰寫語言可能不同，container 提供最佳隔離。
 - plugin 啟動後向 backend 的固定位址註冊自己。V1 認證只檢查來源 IP（同一個內部 network）。
-- 清理、暫停、重起透過 Docker 操作。Docker 為 rootless，backend 可較自由地操作；socket 權限是該使用者的，不是 host root，前面討論時說「等於 host root」不適用。
+- 清理、暫停、重啟透過 Docker 操作。Docker 為 rootless，backend 可較自由地操作；socket 權限是該使用者的，不是 host root，前面討論時說「等於 host root」不適用。
 - 資源：runtime 佔用很小，10 個以內不是問題。
 - 實作先從小範圍開始，不貪心。
 
@@ -203,7 +203,7 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 ### 6.4 待確認
 
-- Suwayomi api 要確認（是否採用、如何呼叫）；Suwayomi 套件邏輯：一個 Suwayomi container 內含多個 source，還是一個 source 一個 container。決定後要回頭更新 2.1 與 2.2。
+- Suwayomi API 要確認（是否採用、如何呼叫）；Suwayomi 套件邏輯：一個 Suwayomi container 內含多個 source，還是一個 source 一個 container。決定後要回頭更新 2.1 與 2.2。
 - plugin 以名稱或 id 識別，不要把 IP 當身分，因為 container 重建後 IP 會變。
 - 心跳或 health check：還沒討論，plugin 掉線後 registry 如何清理。
 
@@ -211,23 +211,24 @@ V1 的最小功能是一條主流程能跑通，各模塊只負責這條流程�
 
 已同意的方向：
 
-- 圖片由 plugin 直接寫入共享 volume，不經過 Backend 傳輸。目錄以「來源網站」為 key，plugin 可以換，檔案佈局不變。
+- 圖片由 plugin 直接寫入共用 volume，不經過 Backend 傳輸。目錄以「來源網站」為 key，plugin 可以換，檔案佈局不變。
 - Database 只由 Backend 管，plugin 不碰。plugin 只回傳 JSON 和寫圖片。隔離靠「沒有掛載給 plugin」達成，只用一個 Docker network。
-- 競爭問題的兩種解法互補：`rename()` 管可見性，檔案鎖或 Backend in-flight 去重管重複工作。
+- 爭奪問題的兩種解法互補：`rename()` 管可見性，檔案鎖或 Backend in-flight 去重管重複工作。
+
 太早討論，待後續深挖：
 
-- **章節是一組檔案**：單檔 `rename()` 原子，但一章多頁需要目錄層級的原子。強制刷新無法原子覆蓋非空目錄，可用版本目錄加 symlink 切換，或以 manifest 當完成標記（檔案存在不代表完整）。
+- **章節是一組檔案**：單檔 `rename()` 原子，但一章多頁需要目錄層級的原子。強制重新抓取無法原子覆蓋非空目錄，可用版本目錄加 symlink 切換，或以 manifest 當完成標記（檔案存在不代表完整）。
 - **重複工作**：同一章兩個請求同時觸發會下載兩次，打到來源網站（C-4）。
 - **繞過 Backend 寫入後失去控制**：空間上限（C-6）放在 plugin 寫入時攔截不到，需要先檢查額度或用 quota；圖片驗證（magic bytes、Content-Type 由 Backend 決定）；檔名由規則決定。
 - **crash 與 container 被停**：`.tmp-*` 孤兒清理；有進行中寫入時不能 stop，與休息機制相關。
 - **實作細節**：`rename()` 不能跨 filesystem（EXDEV），暫存目錄要在同一個 mount；rootless Docker 的 bind mount uid 對應；fsync 持久性（圖片可重新抓取）。
 - plugin 只掛自己的來源目錄（read-write），Backend 掛整個根目錄，需要 read-write（清理要 `unlink`）。
-- 尚未確定：使用者直覺中還有沒考慮到的部分。
+- 尚未確定：是否還有沒考慮到的情況。
 
 ### 6.6 Docker 網路與註冊端點
 
 - 只用一個 Docker network，Backend 與 plugin 在內；Database 與 File Storage 在網路外，隔離靠「沒有掛載給 plugin」。兩個 network 會讓 Backend 有兩張網卡，複雜度不划算。
-- 「檢查來源 IP」有陷阱：會改寫來源的不是 bridge（L2），而是 port publishing 這一層。外部流量經 `docker-proxy`（user space 轉發，對 Backend 是一條新連線）或 rootless 的 RootlessKit port driver 時，來源可能變成 bridge gateway，而 gateway 落在 plugin 網段內，外部請求會被誤判成 plugin。
+- 「檢查來源 IP」有陷阱：會改寫來源位址的不是 bridge（L2），而是 port publishing 這一層。外部流量經 `docker-proxy`（user space 轉發，對 Backend 是一條新連線）或 rootless 的 RootlessKit port driver 時，來源 IP 可能變成 bridge gateway，而 gateway 落在 plugin 網段內，外部請求會被誤判成 plugin。
 - 解法：Backend 開第二個 listener（例如 3001）放 `/register`，不 publish 到 host，只有同 network 的 container 連得到；對外 API 留在 3000。隔離靠可達性，不靠程式碼分辨內外，來源 IP 檢查降為第二層。
 - 後續選項：前面放 reverse proxy container，只有它 publish port，註冊路徑不轉發。Frontend 部署需要靜態檔 server 時再考慮。
 - 待驗證：用 rootless Docker 實測 published port 時 Backend 看到的來源 IP（目前只是推論，未實測）。
@@ -244,8 +245,8 @@ Backend 是 Node.js 單一 event loop，兩個 listener 共用同一個 thread�
 
 擔心的爭奪場景分三類：
 
-- **兩個使用者**：同時要同一章、同時強制刷新、一人閱讀時另一人觸發同步、同時加入與移除同一部漫畫（ref count 歸零時的 check-then-act）。漫畫資料與 `library` 圖片是全體共用的。
-- **使用者和 plugin**：user 在 3000 讀 registry，plugin 在 3001 註冊、重起、移除；使用者讀圖時 plugin 正在寫同一章。
-- **外部資料存取**：同時對來源網站發太多請求被封鎖（C-4）、同一部漫畫被同時同步、外部資料回來時本地狀態已經變（例如漫畫已被移除）。
+- **兩個使用者**：同時要同一章、同時強制重新抓取、一人閱讀時另一人觸發同步、同時加入與移除同一部漫畫（ref count 歸零時的 check-then-act）。漫畫資料與 `library` 圖片是全體共用的。
+- **使用者和 plugin**：使用者在 3000 讀 registry，plugin 在 3001 註冊、重啟、移除；使用者讀圖時 plugin 正在寫同一章。
+- **外部資料存取**：同時對來源網站發太多請求被封鎖（C-4）、同一部漫畫被同時同步、外部資料回來時本地狀態已經改變（例如漫畫已被移除）。
 
 這三類目前只是整理問題，還沒決定解法。

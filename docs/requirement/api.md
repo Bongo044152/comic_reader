@@ -32,7 +32,7 @@
 
 ### 1.3 錯誤
 
-錯誤的回應內容格式與錯誤碼 V1 先不定，實作時看需求再定（Q-A4）。目前各 API 卡只寫可能出現的錯誤與原因，對應 [frontend.md](frontend.md#15-錯誤分類) 的三類錯誤。
+錯誤的回應內容格式與錯誤代碼 V1 先不定，實作時看需求再定（Q-A4）。目前各 API 卡只寫可能出現的錯誤與原因，對應 [frontend.md](frontend.md#15-錯誤分類) 的三類錯誤。
 
 （錯誤代碼與錯誤類型的對照表待補。）
 
@@ -48,7 +48,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | [API-04](#api-04-建立資料夾) | 書庫與資料夾 | `POST /api/folders` | 建立自訂資料夾，可同時放入一部漫畫 | [F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾) |
 | [API-05](#api-05-重新命名資料夾) | 書庫與資料夾 | `PATCH /api/folders/{folderId}` | 重新命名自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
 | [API-06](#api-06-刪除資料夾) | 書庫與資料夾 | `DELETE /api/folders/{folderId}` | 刪除自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
-| [API-07](#api-07-列出資料夾內的漫畫) | 書庫與資料夾 | `GET /api/folders/{folderId}/mangas` | 列出資料夾內的漫畫；`library` 就是書庫列表 | [F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內文) |
+| [API-07](#api-07-列出資料夾內的漫畫) | 書庫與資料夾 | `GET /api/folders/{folderId}/mangas` | 列出資料夾內的漫畫；`library` 就是書庫列表 | [F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內容) |
 | [API-08](#api-08-加入資料夾) | 書庫與資料夾 | `POST /api/folders/{folderId}/mangas` | 把書庫中的漫畫放進自訂資料夾 | [F-08](frontend.md#f-08-加入移出資料夾) |
 | [API-09](#api-09-移出資料夾或移除漫畫) | 書庫與資料夾 | `DELETE /api/folders/{folderId}/mangas/{source_id}/{remote_id}` | 從自訂資料夾移出漫畫；對 `library` 則是移除漫畫（真正刪除） | [F-08](frontend.md#f-08-加入移出資料夾)、[F-09](frontend.md#f-09-移除漫畫) |
 | [API-10](#api-10-加入書庫) | 書庫與資料夾 | `POST /api/library/mangas` | 把漫畫加入書庫，必要時一併建立 Manga | [F-04](frontend.md#f-04-加入書庫) |
@@ -124,7 +124,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **認證與權限**：已登入。
 
-**冪等性**：效果相同（登入狀態都已清除），但第二次呼叫因為沒有登入狀態會因為沒有登入狀態而被拒絕，前端視為已登出。
+**冪等性**：效果相同（登入狀態都已清除），但第二次呼叫因為沒有登入狀態而被拒絕，前端視為已登出。
 
 **規模**：單次請求。
 
@@ -243,7 +243,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 ### API-07 列出資料夾內的漫畫
 
-**目的**：取得某個資料夾的漫畫列表；`folderId` 為 `library` 時就是書庫列表（[F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內文)）。
+**目的**：取得某個資料夾的漫畫列表；`folderId` 為 `library` 時就是書庫列表（[F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內容)）。
 
 **路徑與方法**：`GET /api/folders/{folderId}/mangas`
 
@@ -575,7 +575,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 | 欄位 | 位置 | 型別 | 必填 | 說明 |
 | --- | --- | --- | --- | --- |
-| `limit` | body | 整數 | 否 | 每次要求的章節數量，控制顆粒度 |
+| `limit` | body | 整數 | 否 | 每次要求的章節數量，控制粒度 |
 | `cursor` | body | 字串 | 否 | 續取的位置，取自上一次回應的 `next_cursor` |
 
 **回應**：`200`。不載入圖片。主體同 API-16，另加狀態欄位。
@@ -604,7 +604,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **冪等性**：可重複呼叫，間隔內會被拒絕。
 
-**規模**：對來源的請求用 `limit` 與 `cursor` 控制顆粒度，不一次取大量章節；受最短間隔限制。
+**規模**：對來源的請求用 `limit` 與 `cursor` 控制粒度，不一次取大量章節；受最短間隔限制。
 
 ### API-18 載入章節圖片清單
 
@@ -612,7 +612,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **路徑與方法**：`GET` / `POST /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}`
 
-**請求**：路徑參數都是字串，來源與來源上的 ID。目錄名編碼待定（Q-D6），路徑參數需要 URL 編碼。`POST` 沒有 body。
+**請求**：路徑參數皆為字串（`source_id`、`remote_id` 為來源與漫畫在來源上的 ID，`remote_chapter_id` 為章節在來源上的 ID）。目錄名編碼待定（Q-D6），路徑參數需要 URL 編碼。`POST` 沒有 body。
 
 **回應**：`200`，`GET` 與 `POST` 的內容相同。
 
@@ -628,8 +628,8 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 行為：
 
-- `GET`：書庫的章節目錄中有 `manifest.json` 就回傳頁面清單，沒有則視為不存在，不向 plugin 請求。
-- `POST`：向 plugin 取得這章的頁面清單並回傳。漫畫已被任何人加入（ref count 大於 0）時，同時請 plugin 把整章抓進 `library`（`manifest.json` 最後寫入；書庫已有這章時也重新抓取，新檔取代舊檔）；沒有人加入時只回傳頁面清單，系統不保存圖片。
+- `GET`：書庫的章節目錄中有 `manifest.json` 就回傳圖片清單，沒有則視為不存在，不向 plugin 請求。
+- `POST`：向 plugin 取得這章的圖片清單並回傳。漫畫已被任何人加入（ref count 大於 0）時，同時請 plugin 把整章抓進 `library`（`manifest.json` 最後寫入；書庫已有這章時也重新抓取，新檔取代舊檔）；沒有人加入時只回傳圖片清單，系統不保存圖片。
 - 同一章有 `POST` 進行中時，其他請求等待，不重複下載。
 
 **錯誤**
@@ -671,7 +671,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | Q-A1 | 登入狀態的傳遞方式：JWT 或 session，放在 cookie 或 `Authorization` header（data.md 的 Q-D3） | 全部 |
 | Q-A2 | 同步章節發現衝突後，使用者決定要套用時，後端的套用方式（frontend.md 的 Q-F7） | API-17 |
 | Q-A3 | 對 plugin 與來源請求的逾時值（frontend.md 的 Q-F6） | API-12、API-14、API-17、API-18、API-19 |
-| Q-A4 | 錯誤的回應內容格式與錯誤碼；同一類錯誤有多種原因時前端如何區分（例如 API-04：名稱重複，或漫畫不在書庫） | 全部 |
+| Q-A4 | 錯誤的回應內容格式與錯誤代碼；同一類錯誤有多種原因時前端如何區分（例如 API-04：名稱重複，或漫畫不在書庫） | 全部 |
 | Q-A5 | 章節的 `sort_order` 方向：「最新話」與上一話、下一話以什麼判斷 | API-07、API-16 |
 | Q-A6 | 同步章節（API-17）分批（`limit`、`cursor`）時：續取是否受最短間隔限制、有寫入時回傳整份列表還是該批；詳情與章節同步的最短間隔從何時起算（沒有人加入時資料庫沒有同步時間） | API-12、API-17 |
 | Q-A7 | API-10 直接採用前端傳來的 `title` 與 `cover_url`，是否要向 plugin 驗證 | API-10 |
