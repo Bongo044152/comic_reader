@@ -645,7 +645,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 ### API-19 取得頁面圖片
 
-**目的**：取得一頁圖片的內容（[F-13](frontend.md#f-13-閱讀章節內漫畫圖片)）。
+**目的**：取得一頁圖片的內容（[F-13](frontend.md#f-13-閱讀章節內漫畫圖片)）。這是 1.2「`GET` 只讀本地」的唯一例外。
 
 **路徑與方法**：`GET /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}/pages/{page}`
 
