@@ -227,7 +227,7 @@
 | `source_id` | 字串 | 是 | 來源識別，如 `mangadex`。目前與 plugin 一對一，值等於該 plugin 的 id |
 | `remote_id` | 字串 | 是 | 漫畫在該來源上的 ID |
 | `title` | 字串 | 是 | 漫畫名稱 |
-| `cover_url` | 字串 | 是 | 封面網址 |
+| `cover_url` | 字串 | 否 | 封面網址。來源沒有封面時為空值 |
 | `author` | 字串 | 否 | 空值顯示「未知」 |
 | `status` | 字串 | 否 | 連載狀態，列舉待定（Q-D9） |
 | `region` | 字串 | 否 | |
@@ -245,7 +245,7 @@
 - `id` 是資料庫內部用的整數，讓 Chapter、FolderManga 的外鍵短、好 join。
 
 **獲取**
-- 必填欄位（`source_id`、`remote_id`、`title`、`cover_url`）：來自 plugin 搜尋結果，在「加入」時帶入。
+- 必填欄位（`source_id`、`remote_id`、`title`）與 `cover_url`：來自 plugin 搜尋結果，在「加入」時帶入。
 - 其他欄位：詳情同步時由 plugin 回傳。plugin 沒有的欄位回傳空值。
 
 **存取**：資料庫。讀取：詳情頁、書庫與資料夾列表、本地搜尋。寫入：「加入」建立；詳情同步更新。

@@ -3,6 +3,8 @@
 > `dev.md` 第 5 章的附屬文件。第 1 章是總覽，先讀完它再看後面的 API 卡。
 >
 > 每支 API 對應 [frontend.md](frontend.md) 的功能，欄位引用 [data.md](data.md) 的資料定義，這裡不重複。
+>
+> 本文件為 API 設計的參考，涵蓋總表、共通規則與各 API 的行為語意。欄位型別、必填、範例與錯誤格式，之後以 Swagger 產生的文件為準，此處若有出入不再同步。
 
 ## 1. 總覽
 
@@ -14,7 +16,7 @@
 
 - Backend 與 plugin 之間的 API，包含 plugin 向 Backend 註冊的端點。晚一點再寫。
 - Backend Management：它是 CLI，帳號建立、刪除與 plugin 管理不經過這些 API。
-- [F-14](frontend.md#f-14-切換章節) 切換章節不需要 API，前端用手上的章節列表算出目標章節，再呼叫載入章節（API-18）。
+- [F-14](frontend.md#f-14-切換章節) 切換章節不需要 API，前端用手上的章節列表算出目標章節，再呼叫載入章節圖片清單（API-18）。
 
 ### 1.2 通用約定
 
@@ -57,8 +59,8 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | [API-15](#api-15-列出-plugin) | 搜尋 | `GET /api/sources` | 列出已註冊的 plugin | [F-03](frontend.md#f-03-plugin-搜尋) |
 | [API-16](#api-16-同步本地章節) | 章節與閱讀 | `GET /api/mangas/{source_id}/{remote_id}/chapters` | 讀本地章節列表，沒有則空陣列 | [F-10](frontend.md#f-10-漫畫詳情)、[F-14](frontend.md#f-14-切換章節) |
 | [API-17](#api-17-同步遠端章節) | 章節與閱讀 | `POST /api/mangas/{source_id}/{remote_id}/chapters` | 向來源同步章節，有人加入且沒有衝突才寫入 | [F-12](frontend.md#f-12-同步章節) |
-| [API-18](#api-18-載入章節) | 章節與閱讀 | `GET` / `POST /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}` | `GET` 讀書庫的頁面清單；`POST` 向 plugin 取得頁面清單，已被加入的漫畫同時存進書庫 | [F-13](frontend.md#f-13-閱讀章節)、[F-14](frontend.md#f-14-切換章節) |
-| [API-19](#api-19-取得頁面圖片) | 章節與閱讀 | `GET /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}/pages/{page}` | 取得單頁圖片；書庫沒有時由 plugin 提供 | [F-13](frontend.md#f-13-閱讀章節) |
+| [API-18](#api-18-載入章節圖片清單) | 章節與閱讀 | `GET` / `POST /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}` | `GET` 讀書庫的圖片清單；`POST` 向 plugin 取得圖片清單，已被加入的漫畫同時存進書庫 | [F-13](frontend.md#f-13-閱讀章節內漫畫圖片)、[F-14](frontend.md#f-14-切換章節) |
+| [API-19](#api-19-取得頁面圖片) | 章節與閱讀 | `GET /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}/pages/{page}` | 取得單頁圖片；書庫沒有時由 plugin 提供 | [F-13](frontend.md#f-13-閱讀章節內漫畫圖片) |
 
 ### 1.5 API 卡欄位
 
@@ -247,7 +249,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **請求**：路徑參數 `folderId`（資料夾 `id` 或 `library`）。
 
-**回應**：`200`。`latest_chapter` 來自 Chapter，資料庫還沒有章節時為 `null`。
+**回應**：`200`。`latest_chapter` 來自 Chapter，資料庫還沒有章節時為 `null`。`cover_url` 在來源沒有封面時為 `null`。
 
 ```json
 [
@@ -339,12 +341,12 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | `source_id` | body | 字串 | 是 | |
 | `remote_id` | body | 字串 | 是 | |
 | `title` | body | 字串 | 是 | |
-| `cover_url` | body | 字串 | 是 | |
+| `cover_url` | body | 字串 | 否 | 來源沒有封面時可省略 |
 
 **回應**：新加入回 `201`，已經在書庫回 `200`，內容都是空。不抓取詳情與章節。
 
 **錯誤**
-- 欄位缺漏或為空。
+- 必填欄位缺漏或為空。
 
 **認證與權限**：已登入。
 
@@ -364,7 +366,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **請求**：路徑參數 `source_id`、`remote_id`，皆為字串。
 
-**回應**：`200`。只讀資料庫，不向來源請求。空值欄位前端顯示「未知」。`folder_ids` 是這位使用者放了這部漫畫的自訂資料夾。
+**回應**：`200`。只讀資料庫，不向來源請求。空值欄位前端顯示「未知」。`cover_url` 在來源沒有封面時為 `null`。`folder_ids` 是這位使用者放了這部漫畫的自訂資料夾。
 
 ```json
 {
@@ -456,7 +458,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | --- | --- | --- | --- | --- |
 | `q` | query | 字串 | 是 | 關鍵字，不可為空 |
 
-**回應**：`200`。沒有符合的結果時回空陣列，不是錯誤。
+**回應**：`200`。沒有符合的結果時回空陣列，不是錯誤。`cover_url` 在來源沒有封面時為 `null`。
 
 ```json
 [
@@ -486,7 +488,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 | `q` | query | 字串 | 是 | 關鍵字，不可為空 |
 | `sources` | query | 字串 | 是 | 以逗號分隔的 `source_id`，至少一個 |
 
-**回應**：`200`。`in_library` 表示這位使用者的書庫是否已有這部漫畫。單一 plugin 失敗或逾時不影響其他，失敗的來源列入 `failed_sources`。所有勾選的 plugin 都沒有符合的漫畫時，`results` 為空陣列，不是錯誤。
+**回應**：`200`。`in_library` 表示這位使用者的書庫是否已有這部漫畫。單一 plugin 失敗或逾時不影響其他，失敗的來源列入 `failed_sources`。所有勾選的 plugin 都沒有符合的漫畫時，`results` 為空陣列，不是錯誤。`cover_url` 在來源沒有封面時為 `null`。
 
 ```json
 {
@@ -604,9 +606,9 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 **規模**：對來源的請求用 `limit` 與 `cursor` 控制顆粒度，不一次取大量章節；受最短間隔限制。
 
-### API-18 載入章節
+### API-18 載入章節圖片清單
 
-**目的**：取得一章的頁面清單；書庫沒有這章時，由 `POST` 向 plugin 取得。未加入書庫的漫畫也可以閱讀（[F-13](frontend.md#f-13-閱讀章節)）。
+**目的**：取得一章的圖片清單；書庫沒有這章時，由 `POST` 向 plugin 取得。未加入書庫的漫畫也可以閱讀（[F-13](frontend.md#f-13-閱讀章節內漫畫圖片)）。
 
 **路徑與方法**：`GET` / `POST /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}`
 
@@ -643,7 +645,7 @@ API 卡的「錯誤」欄只列各 API 可能出現的錯誤（原因），登�
 
 ### API-19 取得頁面圖片
 
-**目的**：取得一頁圖片的內容（[F-13](frontend.md#f-13-閱讀章節)）。
+**目的**：取得一頁圖片的內容（[F-13](frontend.md#f-13-閱讀章節內漫畫圖片)）。
 
 **路徑與方法**：`GET /api/mangas/{source_id}/{remote_id}/chapters/{remote_chapter_id}/pages/{page}`
 
