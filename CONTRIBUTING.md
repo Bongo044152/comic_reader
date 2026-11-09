@@ -4,6 +4,7 @@
 
 - `main` 永遠可跑，只透過 PR 合併，不直接 push
 - 功能分支命名：`feat/xxx`、`fix/xxx`、`docs/xxx`、`chore/xxx`
+- MVP 驗證分支命名：`MVP-編號`，例如 `MVP-001`（技術鏈驗證用，不加類型前綴）
 - 合併用 squash，一個 PR 一個 commit
 
 ## Commit
