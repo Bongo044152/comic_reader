@@ -8,13 +8,13 @@
 
 ### 1.1 範圍
 
-這份文件只定義 Frontend 與 Backend 之間的 API，共 21 支，涵蓋 [frontend.md](frontend.md) 的 F-01 到 F-14。
+這份文件只定義 Frontend 與 Backend 之間的 API，共 22 支，涵蓋 [frontend.md](frontend.md) 的 F-01 到 F-14。
 
 不包含：
 
 - Backend 與 plugin 之間的 API，包含 plugin 向 Backend 註冊的端點。晚一點再寫。
 - Backend Management：它是 CLI，帳號建立、刪除與 plugin 管理不經過這些 API。
-- [F-14](frontend.md#f-14-切換章節) 切換章節不需要 API，前端用手上的章節列表算出目標章節，再呼叫載入章節（API-20）。
+- [F-14](frontend.md#f-14-切換章節) 切換章節不需要 API，前端用手上的章節列表算出目標章節，再呼叫載入章節（API-21）。
 
 ### 1.2 通用約定
 
@@ -33,7 +33,7 @@
 | HTTP | 類型 | 意義 |
 | --- | --- | --- |
 | 400 | 使用者端 | 欄位缺漏、為空或格式不合法 |
-| 401 | 使用者端 | 沒有登入或登入已過期，前端導回登入頁；登入 API 的 401 則是帳號不存在或密碼錯誤 |
+| 401 | 使用者端 | 需登入的 API 沒有有效 session，前端導回登入頁；登入 API 的 401 代表帳號不存在或密碼錯誤，前端統一顯示登入失敗 |
 | 403 | 使用者端 | 書庫的限制：不可刪除、不可重新命名，也不能用「加入資料夾」加入漫畫 |
 | 404 | 使用者端 | 資源不存在，或不屬於目前登入者 |
 | 409 | 使用者端 | 與現有資料衝突：資料夾名稱重複，或漫畫還沒有加入書庫 |
@@ -50,25 +50,26 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 | --- | --- | --- | --- |
 | [API-01](#api-01-登入) | `POST /api/auth/login` | 登入，建立登入狀態 | [F-01](frontend.md#f-01-登入登出) |
 | [API-02](#api-02-登出) | `POST /api/auth/logout` | 登出，清除登入狀態 | [F-01](frontend.md#f-01-登入登出) |
-| [API-03](#api-03-列出資料夾) | `GET /api/folders` | 列出該使用者的所有資料夾 | [F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾) |
-| [API-04](#api-04-建立資料夾) | `POST /api/folders` | 建立自訂資料夾，可同時放入一部漫畫 | [F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾) |
-| [API-05](#api-05-重新命名資料夾) | `PATCH /api/folders/{folderId}` | 重新命名自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
-| [API-06](#api-06-刪除資料夾) | `DELETE /api/folders/{folderId}` | 刪除自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
-| [API-07](#api-07-列出資料夾內的漫畫) | `GET /api/folders/{folderId}/mangas` | 列出資料夾內的漫畫；`library` 就是書庫列表 | [F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內文) |
-| [API-08](#api-08-加入資料夾) | `POST /api/folders/{folderId}/mangas` | 把書庫中的漫畫放進自訂資料夾 | [F-08](frontend.md#f-08-加入移出資料夾) |
-| [API-09](#api-09-移出資料夾或移除漫畫) | `DELETE /api/folders/{folderId}/mangas/{mangaId}` | 從自訂資料夾移出漫畫；對 `library` 則是移除漫畫（真正刪除） | [F-08](frontend.md#f-08-加入移出資料夾)、[F-09](frontend.md#f-09-移除漫畫) |
-| [API-10](#api-10-加入書庫) | `POST /api/library/mangas` | 把漫畫加入書庫，必要時一併建立 Manga | [F-04](frontend.md#f-04-加入書庫) |
-| [API-11](#api-11-取得漫畫詳情) | `GET /api/mangas/{mangaId}` | 以 id 取得本地漫畫詳情與是否已加入 | [F-10](frontend.md#f-10-漫畫詳情) |
-| [API-12](#api-12-以來源識別查詢漫畫) | `GET /api/mangas/lookup` | 以來源識別查本地有沒有這部漫畫 | [F-10](frontend.md#f-10-漫畫詳情) |
-| [API-13](#api-13-取得遠端詳情) | `GET /api/remote/mangas` | 向來源取得漫畫詳情，不寫入資料庫 | [F-10](frontend.md#f-10-漫畫詳情) |
-| [API-14](#api-14-列出章節) | `GET /api/mangas/{mangaId}/chapters` | 列出本地的章節列表 | [F-10](frontend.md#f-10-漫畫詳情)、[F-14](frontend.md#f-14-切換章節) |
-| [API-15](#api-15-同步詳情) | `POST /api/mangas/sync-detail` | 向來源同步詳情，有人加入才寫入 | [F-11](frontend.md#f-11-同步詳情) |
-| [API-16](#api-16-同步章節) | `POST /api/mangas/sync-chapters` | 向來源同步章節，有人加入且沒有衝突才寫入 | [F-12](frontend.md#f-12-同步章節) |
-| [API-17](#api-17-本地搜尋) | `GET /api/search/local` | 在自己的書庫中以標題搜尋 | [F-02](frontend.md#f-02-本地搜尋) |
-| [API-18](#api-18-plugin-搜尋) | `GET /api/search/remote` | 對勾選的 plugin 搜尋來源網站 | [F-03](frontend.md#f-03-plugin-搜尋) |
-| [API-19](#api-19-列出-plugin) | `GET /api/sources` | 列出已註冊的 plugin | [F-03](frontend.md#f-03-plugin-搜尋) |
-| [API-20](#api-20-載入章節) | `GET /api/read/{source_id}/{remote_manga_id}/{remote_chapter_id}` | 確保一章的圖片已就緒，回傳頁面清單 | [F-13](frontend.md#f-13-閱讀章節)、[F-14](frontend.md#f-14-切換章節) |
-| [API-21](#api-21-取得頁面圖片) | `GET /api/images/{source_id}/{remote_manga_id}/{remote_chapter_id}/{page}` | 取得單頁圖片 | [F-13](frontend.md#f-13-閱讀章節) |
+| [API-03](#api-03-登入狀態) | `GET /api/auth/me` | 獲取登入狀態 | [F-01](frontend.md#f-01-登入登出) |
+| [API-04](#api-04-列出資料夾) | `GET /api/folders` | 列出該使用者的所有資料夾 | [F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾) |
+| [API-05](#api-05-建立資料夾) | `POST /api/folders` | 建立自訂資料夾，可同時放入一部漫畫 | [F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾) |
+| [API-06](#api-06-重新命名資料夾) | `PATCH /api/folders/{folderId}` | 重新命名自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
+| [API-07](#api-07-刪除資料夾) | `DELETE /api/folders/{folderId}` | 刪除自訂資料夾 | [F-06](frontend.md#f-06-資料夾管理) |
+| [API-08](#api-08-列出資料夾內的漫畫) | `GET /api/folders/{folderId}/mangas` | 列出資料夾內的漫畫；`library` 就是書庫列表 | [F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內文) |
+| [API-09](#api-09-加入資料夾) | `POST /api/folders/{folderId}/mangas` | 把書庫中的漫畫放進自訂資料夾 | [F-08](frontend.md#f-08-加入移出資料夾) |
+| [API-10](#api-10-移出資料夾或移除漫畫) | `DELETE /api/folders/{folderId}/mangas/{mangaId}` | 從自訂資料夾移出漫畫；對 `library` 則是移除漫畫（真正刪除） | [F-08](frontend.md#f-08-加入移出資料夾)、[F-09](frontend.md#f-09-移除漫畫) |
+| [API-11](#api-11-加入書庫) | `POST /api/library/mangas` | 把漫畫加入書庫，必要時一併建立 Manga | [F-04](frontend.md#f-04-加入書庫) |
+| [API-12](#api-12-取得漫畫詳情) | `GET /api/mangas/{mangaId}` | 以 id 取得本地漫畫詳情與是否已加入 | [F-10](frontend.md#f-10-漫畫詳情) |
+| [API-13](#api-13-以來源識別查詢漫畫) | `GET /api/mangas/lookup` | 以來源識別查本地有沒有這部漫畫 | [F-10](frontend.md#f-10-漫畫詳情) |
+| [API-14](#api-14-取得遠端詳情) | `GET /api/remote/mangas` | 向來源取得漫畫詳情，不寫入資料庫 | [F-10](frontend.md#f-10-漫畫詳情) |
+| [API-15](#api-15-列出章節) | `GET /api/mangas/{mangaId}/chapters` | 列出本地的章節列表 | [F-10](frontend.md#f-10-漫畫詳情)、[F-14](frontend.md#f-14-切換章節) |
+| [API-16](#api-16-同步詳情) | `POST /api/mangas/sync-detail` | 向來源同步詳情，有人加入才寫入 | [F-11](frontend.md#f-11-同步詳情) |
+| [API-17](#api-17-同步章節) | `POST /api/mangas/sync-chapters` | 向來源同步章節，有人加入且沒有衝突才寫入 | [F-12](frontend.md#f-12-同步章節) |
+| [API-18](#api-18-本地搜尋) | `GET /api/search/local` | 在自己的書庫中以標題搜尋 | [F-02](frontend.md#f-02-本地搜尋) |
+| [API-19](#api-19-plugin-搜尋) | `GET /api/search/remote` | 對勾選的 plugin 搜尋來源網站 | [F-03](frontend.md#f-03-plugin-搜尋) |
+| [API-20](#api-20-列出-plugin) | `GET /api/sources` | 列出已註冊的 plugin | [F-03](frontend.md#f-03-plugin-搜尋) |
+| [API-21](#api-21-載入章節) | `GET /api/read/{source_id}/{remote_manga_id}/{remote_chapter_id}` | 確保一章的圖片已就緒，回傳頁面清單 | [F-13](frontend.md#f-13-閱讀章節)、[F-14](frontend.md#f-14-切換章節) |
+| [API-22](#api-22-取得頁面圖片) | `GET /api/images/{source_id}/{remote_manga_id}/{remote_chapter_id}/{page}` | 取得單頁圖片 | [F-13](frontend.md#f-13-閱讀章節) |
 
 ### 1.5 API 卡欄位
 
@@ -79,7 +80,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 | 請求 | 路徑參數、query、body 的欄位、型別、必填 |
 | 回應 | 成功時的結構與狀態碼 |
 | 錯誤 | 這支 API 特有的錯誤，寫成「狀態碼：原因」，狀態碼的類型見 1.3 |
-| 認證與權限 | 誰能呼叫；除登入外都需要登入，這裡只寫額外的限制 |
+| 認證與權限 | 誰能呼叫；除登入與登出外都需要有效 session，這裡只寫額外的限制 |
 | 冪等性 | 重複呼叫的結果是否相同 |
 | 規模 | 筆數上限、逾時、並發 |
 
@@ -104,6 +105,10 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **回應**：`200`，並建立登入狀態。
 
+回應需透過 `Set-Cookie` 設定 session cookie。Cookie 至少使用 `HttpOnly`、`Secure`（正式環境）與 `SameSite=Lax`；`Path` 限定為 `/api` 或更窄範圍，不設定 `Domain`。若前後端跨 origin，前端請求需帶 credentials，後端只允許明確列出的前端 origin 並允許 credentials，不得使用 `*`。登入成功時建立新的 session ID，避免沿用登入前的識別值。
+
+使用 cookie 認證時，所有會改變資料的 API 都必須驗證 `Origin` 或採用 CSRF token；若前後端部署為跨 site，需改用 `SameSite=None; Secure` 並採用 CSRF token。不得將 session ID 放在 URL、前端可讀的儲存空間或記錄檔中。
+
 ```json
 { "user": { "id": 1, "username": "alice" } }
 ```
@@ -114,7 +119,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **認證與權限**：不需要登入。
 
-**冪等性**：不是。每次成功都建立新的登入狀態。
+**冪等性**：不是。每次成功都建立新的登入狀態與新的 session ID。
 
 **規模**：單次請求。登入失敗的次數限制 V1 不處理。
 
@@ -126,13 +131,34 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **請求**：無。
 
-**回應**：`204`，清除登入狀態。
+**回應**：無論目前是否有有效 session，一律回 `204`，並以 `Set-Cookie` 清除 session cookie（`Max-Age=0`，且 `Path`、`Domain` 等屬性需與登入時一致）。若請求帶有有效 session，後端同時撤銷伺服器端 session。
 
 **錯誤**：無特有的錯誤。
 
-**認證與權限**：已登入。
+**認證與權限**：不要求有效 session；登出對未登入狀態也成功，避免重複登出造成不同結果。
 
-**冪等性**：效果相同（登入狀態都已清除），但第二次呼叫因為沒有登入狀態會回 401，前端視為已登出。
+**冪等性**：是。重複呼叫都回 `204`，登入狀態維持清除。
+
+**規模**：單次請求。
+
+### API-03 登入狀態
+
+**目的**：獲取使用者登入狀態。
+
+**路徑與方法**：`GET /api/auth/me`
+
+**請求**：無。
+
+**回應**：`200`，獲取使用者資料。
+```json
+{ "id": 1, "username": "alice" }
+```
+
+**錯誤**：`401`，session過期或未登入。
+
+**認證與權限**：需帶有效 session；未登入或過期回 401。
+
+**冪等性**：是。
 
 **規模**：單次請求。
 
@@ -140,7 +166,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 ## 3. 書庫與資料夾
 
-### API-03 列出資料夾
+### API-04 列出資料夾
 
 **目的**：取得該使用者所有資料夾，供資料夾頁面與「加入資料夾」選擇（[F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾)）。
 
@@ -165,7 +191,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：不分頁。
 
-### API-04 建立資料夾
+### API-05 建立資料夾
 
 **目的**：建立自訂資料夾；加入資料夾時輸入新名稱，也經由這支 API 一起建立並加入（[F-06](frontend.md#f-06-資料夾管理)、[F-08](frontend.md#f-08-加入移出資料夾)）。
 
@@ -196,7 +222,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次操作。
 
-### API-05 重新命名資料夾
+### API-06 重新命名資料夾
 
 **目的**：修改自訂資料夾的名稱（[F-06](frontend.md#f-06-資料夾管理)）。
 
@@ -227,7 +253,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次操作。
 
-### API-06 刪除資料夾
+### API-07 刪除資料夾
 
 **目的**：刪除自訂資料夾（[F-06](frontend.md#f-06-資料夾管理)）。
 
@@ -247,7 +273,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次操作。
 
-### API-07 列出資料夾內的漫畫
+### API-08 列出資料夾內的漫畫
 
 **目的**：取得某個資料夾的漫畫列表；`folderId` 為 `library` 時就是書庫列表（[F-05](frontend.md#f-05-書庫列表)、[F-07](frontend.md#f-07-資料夾內文)）。
 
@@ -279,7 +305,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：不分頁，整個資料夾一次回傳。
 
-### API-08 加入資料夾
+### API-09 加入資料夾
 
 **目的**：把書庫中的漫畫放進自訂資料夾（[F-08](frontend.md#f-08-加入移出資料夾)）。
 
@@ -289,7 +315,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 | 欄位 | 位置 | 型別 | 必填 | 說明 |
 | --- | --- | --- | --- | --- |
-| `folderId` | 路徑 | 整數 | 是 | 不可為 `library`，加入書庫請用 API-10 |
+| `folderId` | 路徑 | 整數 | 是 | 不可為 `library`，加入書庫請用 API-11 |
 | `manga_id` | body | 整數 | 是 | 漫畫必須已在書庫 |
 
 **回應**：新加入回 `201`，已經在這個資料夾回 `200`，內容都是空。
@@ -306,7 +332,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次操作。
 
-### API-09 移出資料夾或移除漫畫
+### API-10 移出資料夾或移除漫畫
 
 **目的**：從自訂資料夾移出漫畫；或在 `folderId` 為 `library` 時，從書庫移除漫畫，等於真正刪除（[F-08](frontend.md#f-08-加入移出資料夾)、[F-09](frontend.md#f-09-移除漫畫)）。
 
@@ -333,7 +359,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次操作。
 
-### API-10 加入書庫
+### API-11 加入書庫
 
 **目的**：把一部漫畫加入使用者的書庫，漫畫不在資料庫時一併建立（[F-04](frontend.md#f-04-加入書庫)）。
 
@@ -367,7 +393,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 ## 4. 漫畫與同步
 
-### API-11 取得漫畫詳情
+### API-12 取得漫畫詳情
 
 **目的**：以資料庫 id 取得本地的漫畫詳情，以及是否已加入書庫（[F-10](frontend.md#f-10-漫畫詳情)）。
 
@@ -408,7 +434,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次查詢。
 
-### API-12 以來源識別查詢漫畫
+### API-13 以來源識別查詢漫畫
 
 **目的**：從 plugin 搜尋結果進入詳情頁時，用 `source_id` 與 `remote_id` 查本地有沒有這部漫畫（[F-10](frontend.md#f-10-漫畫詳情)）。
 
@@ -421,11 +447,11 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 | `source_id` | query | 字串 | 是 | |
 | `remote_id` | query | 字串 | 是 | |
 
-**回應**：`200`，結構同 API-11。
+**回應**：`200`，結構同 API-12。
 
 **錯誤**
 - 400：缺少參數。
-- 404：資料庫沒有這部漫畫。前端以此判斷「不在資料庫」，改呼叫 API-13 向遠端取詳情。
+- 404：資料庫沒有這部漫畫。前端以此判斷「不在資料庫」，改呼叫 API-14 向遠端取詳情。
 
 **認證與權限**：已登入。
 
@@ -433,7 +459,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：單次查詢。
 
-### API-13 取得遠端詳情
+### API-14 取得遠端詳情
 
 **目的**：資料庫沒有的漫畫，向來源取詳情顯示，不寫入資料庫（[F-10](frontend.md#f-10-漫畫詳情)）。
 
@@ -441,7 +467,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **請求**：query 為 `source_id`、`remote_id`，皆必填。
 
-**回應**：`200`，欄位同 API-11 的 `manga`，但沒有 `id` 與兩個 `*_synced_at`。
+**回應**：`200`，欄位同 API-12 的 `manga`，但沒有 `id` 與兩個 `*_synced_at`。
 
 ```json
 {
@@ -470,7 +496,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：逾時值待定（Q-A3）。
 
-### API-14 列出章節
+### API-15 列出章節
 
 **目的**：取得本地的章節列表（[F-10](frontend.md#f-10-漫畫詳情)、[F-14](frontend.md#f-14-切換章節)）。
 
@@ -497,7 +523,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：不分頁，一次回傳完整的本地章節列表。
 
-### API-15 同步詳情
+### API-16 同步詳情
 
 **目的**：向來源取得最新的漫畫詳情；有人加入這部漫畫時才寫入資料庫（[F-11](frontend.md#f-11-同步詳情)）。
 
@@ -511,7 +537,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 { "manga": { "source_id": "mangadex", "remote_id": "a1b2c3", "title": "範例漫畫" }, "persisted": true }
 ```
 
-`manga` 的欄位同 API-13，`persisted` 為 `true` 時另有 `id`。
+`manga` 的欄位同 API-14，`persisted` 為 `true` 時另有 `id`。
 
 **錯誤**
 - 400：缺少參數。
@@ -524,7 +550,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：受最短間隔限制，間隔值寫在設定檔。
 
-### API-16 同步章節
+### API-17 同步章節
 
 **目的**：向來源取得章節列表，與現有章節比對；有人加入且沒有衝突時才寫入（[F-12](frontend.md#f-12-同步章節)）。
 
@@ -571,7 +597,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 ## 5. 搜尋
 
-### API-17 本地搜尋
+### API-18 本地搜尋
 
 **目的**：以標題搜尋使用者書庫中的漫畫（[F-02](frontend.md#f-02-本地搜尋)）。
 
@@ -600,7 +626,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：範圍是單一使用者的書庫，不分頁。
 
-### API-18 plugin 搜尋
+### API-19 plugin 搜尋
 
 **目的**：對使用者勾選的 plugin 並行搜尋來源網站，合併結果；不寫入資料庫（[F-03](frontend.md#f-03-plugin-搜尋)）。
 
@@ -636,7 +662,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：plugin 約 10 個以內，並行呼叫；單一 plugin 的逾時值待定（Q-A3）。
 
-### API-19 列出 plugin
+### API-20 列出 plugin
 
 **目的**：取得目前已註冊的 plugin，供搜尋時勾選（[F-03](frontend.md#f-03-plugin-搜尋)）。
 
@@ -664,7 +690,7 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 ## 6. 閱讀
 
-### API-20 載入章節
+### API-21 載入章節
 
 **目的**：確保一章的圖片已在檔案系統，並回傳頁面清單；未加入書庫的漫畫也可以閱讀（[F-13](frontend.md#f-13-閱讀章節)）。
 
@@ -701,13 +727,13 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 **規模**：一章頁數不定；未命中快取時會對來源發請求（C-4）。
 
-### API-21 取得頁面圖片
+### API-22 取得頁面圖片
 
 **目的**：取得一頁圖片的內容（[F-13](frontend.md#f-13-閱讀章節)）。
 
 **路徑與方法**：`GET /api/images/{source_id}/{remote_manga_id}/{remote_chapter_id}/{page}`
 
-**請求**：路徑參數 `page` 為頁碼（整數，從 1 開始），其餘同 API-20。
+**請求**：路徑參數 `page` 為頁碼（整數，從 1 開始），其餘同 API-21。
 
 **回應**：`200`，圖片位元組；`Content-Type` 由 Backend 決定，不信任 plugin 回傳的值。
 
@@ -726,11 +752,9 @@ API 卡的「錯誤」欄只列各 API 特有的錯誤，401 與 500 不再重�
 
 | 編號 | 問題 | 相關 API |
 | --- | --- | --- |
-| Q-A1 | 登入狀態的傳遞方式：JWT 或 session，放在 cookie 或 `Authorization` header（data.md 的 Q-D3） | 全部 |
-| Q-A2 | 同步章節發現衝突後，使用者決定要套用時，後端的套用方式（frontend.md 的 Q-F7） | API-16 |
-| Q-A3 | 對 plugin 與來源請求的逾時值（frontend.md 的 Q-F6） | API-13、API-18 |
-| Q-A4 | 錯誤的回應內容格式與錯誤碼；同一個狀態碼對應多種錯誤時前端如何區分（例如 API-04 的 409：名稱重複，或漫畫不在書庫） | 全部 |
-| Q-A5 | 章節的 `sort_order` 方向：「最新話」與上一話、下一話以什麼判斷 | API-07、API-14 |
-| Q-A6 | 同步章節分批（`limit`、`cursor`）時：續取是否受最短間隔限制、有寫入時回傳整份列表還是該批；最短間隔從何時起算（沒有人加入時資料庫沒有同步時間） | API-15、API-16 |
-| Q-A7 | API-10 直接採用前端傳來的 `title` 與 `cover_url`，是否要向 plugin 驗證 | API-10 |
-| Q-A8 | 重新整理頁面後如何取得目前登入者（目前沒有 `GET /api/auth/me`） | API-01 |
+| Q-A2 | 同步章節發現衝突後，使用者決定要套用時，後端的套用方式（frontend.md 的 Q-F7） | API-17 |
+| Q-A3 | 對 plugin 與來源請求的逾時值（frontend.md 的 Q-F6） | API-14、API-19 |
+| Q-A4 | 錯誤的回應內容格式與錯誤碼；同一個狀態碼對應多種錯誤時前端如何區分（例如 API-05 的 409：名稱重複，或漫畫不在書庫） | 全部 |
+| Q-A5 | 章節的 `sort_order` 方向：「最新話」與上一話、下一話以什麼判斷 | API-08、API-15 |
+| Q-A6 | 同步章節分批（`limit`、`cursor`）時：續取是否受最短間隔限制、有寫入時回傳整份列表還是該批；最短間隔從何時起算（沒有人加入時資料庫沒有同步時間） | API-16、API-17 |
+| Q-A7 | API-11 直接採用前端傳來的 `title` 與 `cover_url`，是否要向 plugin 驗證 | API-11 |
