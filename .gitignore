@@ -10,3 +10,16 @@ node_modules
 
 # TypeScript build output
 dist
+
+# Local SQLite databases and journal files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+/backend/app/data/
+
+# Local manifests; runnable Node apps have manifests in their own directories
+/package.json
+/package-lock.json
+/backend/package-lock.json
