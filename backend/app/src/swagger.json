@@ -51,45 +51,6 @@
         }
       }
     },
-    "/createUser": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "創建",
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "username",
-                  "password"
-                ],
-                "properties": {
-                  "username": {
-                    "type": "string",
-                    "example": "alice"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "example": "secret"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/logout": {
       "post": {
         "tags": [
@@ -100,42 +61,6 @@
         "responses": {
           "204": {
             "description": "No Content"
-          }
-        }
-      }
-    },
-    "/deleteUser": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "刪除",
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "username"
-                ],
-                "properties": {
-                  "username": {
-                    "type": "string",
-                    "example": "alice"
-                  }
-                }
-              }
-            }
           }
         }
       }

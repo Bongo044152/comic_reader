@@ -1,6 +1,7 @@
 import path from 'node:path';
 import swaggerAutogen from 'swagger-autogen';
 
+// docs: https://swagger-autogen.github.io/docs/
 const outputFile = path.resolve('src/swagger.json');
 const endpointsFiles = [path.resolve('src/routes/**/*.ts')];
 const doc = {
@@ -13,7 +14,7 @@ const doc = {
         url: 'http://localhost:5090/api/auth',
         description: 'Local server',
     }],
-    components: { // 共用
+    components: { // 共用元件
         securitySchemes: {
             cookieAuth: { type: 'apiKey', in: 'cookie', name: 'sid' },
         }

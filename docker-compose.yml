@@ -16,6 +16,7 @@ services:
       PORT: "5090" # port the backend listens on inside the container (default: 5090)
       LOG_LEVEL: "info" # backend logging level (default: info): https://getpino.io/#/docs/api?id=loggerlevel-string-gettersetter
     volumes:
+      # Docker creates this named volume on first start; SQLite creates app.db.
       - dbdata:/data
   frontend:
     build: ./frontend

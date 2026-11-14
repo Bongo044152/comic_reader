@@ -1,31 +1,27 @@
 # Backend
 
-Comic Reader 後端使用 Express 5 與 TypeScript，提供帳號操作 API、session 驗證和 Swagger 文件。SQLite 由 `better-sqlite3` 操作，登入 session 也儲存在同一個 SQLite 資料庫，Session表為express-session預設，不另外設計。
+Comic Reader 後端使用 Express 5、TypeScript 與 SQLite。登入狀態由 `express-session` 管理，session 存放在 SQLite 資料庫中，Session表為 `express-session` 預設，不另外設計。
 
-## 啟動
+## 使用 Docker Compose
 
-從專案根目錄啟動後端：
+在專案根目錄啟動或重建後端：
 
 ```powershell
 docker compose up -d --build backend
 ```
 
-查看啟動狀態和日誌：
+查看服務狀態與日誌：
 
 ```powershell
 docker compose ps backend
 docker compose logs -f backend
 ```
 
-後端預設監聽 `5090`。API 文件網址：<http://localhost:5090/api/docs>。
+後端預設監聽 `http://localhost:5090`，Swagger UI 位於 <http://localhost:5090/api/docs>。
 
-Docker build 會執行 `npm run build`；該 script 先產生 Swagger JSON，再編譯 TypeScript。需要單獨更新本機 Swagger JSON 時，從 `backend/app` 執行：
+## 本機開發
 
-```powershell
-npm run swagger
-```
-
-本機 build 指令：
+在 `backend/app` 安裝相依套件並建置：
 
 ```powershell
 cd backend/app
@@ -34,72 +30,65 @@ npm run build
 npm start
 ```
 
-`better-sqlite3` 是原生模組；Docker build stage 會安裝 Python、make 和 g++ 供編譯使用。
+`npm run build` 會先執行 Swagger 文件產生器，再用 TypeScript 編譯 `src` 到 `dist`。執行 `npm start` 前，請確認 `DB_PATH` 指向可寫入的位置；未設定時會使用工作目錄中的 `app.db`。
 
-## Backend 結構
+`better-sqlite3` 含原生模組。Dockerfile 在 build 階段安裝 Python、make 和 g++，用來建置相依套件。
 
-```text
-backend/
-├── Dockerfile                 # 多階段映像建置
-└── app/
-    ├── package.json           # scripts 和套件
-    └── src/
-        ├── index.ts           # Express app、middleware、session 和路由掛載
-        ├── swagger.json       # Swagger Autogen 產生的 OpenAPI 文件
-        ├── routes/            # API 路由
-        ├── controllers/       # HTTP handler 和帳號操作
-        ├── middlewares/       # session 驗證 middleware
-        └── utils/
-            ├── db.ts          # SQLite 連線、schema 和查詢 helper
-            ├── interface.ts   # TypeScript 資料型別
-            ├── logger.ts      # Pino HTTP logger
-            └── swagger.ts    # Swagger Autogen 設定
+## 建立使用者
+
+可以在後端容器中執行以下命令，將使用者寫入 Compose 使用的資料庫。命令會先以 bcrypt 產生密碼雜湊，再寫入 `/data/app.db`：
+
+```powershell
+docker compose exec -T backend node -e "const bcrypt=require('bcrypt');const Database=require('better-sqlite3');const db=new Database('/data/app.db');const username=process.argv[1],password=process.argv[2];if(!username||!password)throw Error('Usage: create-user <username> <password>');db.prepare('INSERT INTO users (username,password_hash) VALUES (?,?)').run(username,bcrypt.hashSync(password,10));console.log('Created user:',username)" alice secret
 ```
+
+將 `alice` 和 `secret` 換成要建立的帳號與密碼。帳號名稱必須唯一；重複名稱會因資料庫的唯一性限制而失敗。
 
 ## API
 
-所有帳號 API 目前掛載在 `/api/auth`：
+認證路由掛載在 `/api/auth`：
 
-| Method | Path | 用途 | JSON body |
+| Method | Path | 說明 | Body |
 | --- | --- | --- | --- |
-| POST | `/api/auth/logout` | 登出並清除 session cookie | 無 |
-| POST | `/api/auth/login` | 登入並建立 session | `username`, `password` |
-下面api只為測試用途
-| POST | `/api/auth/createUser` | 建立使用者 | `username`, `password` |
-| POST | `/api/auth/deleteUser` | 刪除使用者 | `username` |
+| `POST` | `/api/auth/login` | 驗證帳密並建立 session | `username`, `password` |
+| `POST` | `/api/auth/logout` | 登出並清除 session cookie | 無 |
 
-Swagger UI 提供互動式 API 文件：<http://localhost:5090/api/docs>。Swagger 設定位於 `src/utils/swagger.ts`，會自動掃描 `src/routes/**/*.ts`，並輸出到 `src/swagger.json`。執行 `npm run build` 會先產生 Swagger JSON，再編譯 TypeScript；新增 route 檔不需逐一加入清單。
+完整 API 定義請查看 Swagger UI：<http://localhost:5090/api/docs>。規格由 `src/utils/swagger.ts` 產生，輸出至 `src/swagger.json`。
 
-目前 Swagger server 前綴和 Express mount path 都是 `/api/auth`。若新增掛載在不同前綴的 router，需同步調整 Swagger 路徑設定，或先統一 API router 的掛載方式，避免 Try it out 呼叫錯誤網址。
+## Session 與型別
 
-## Session 與 express-session
+- `src/index.ts` 設定 `express-session`，cookie 名稱為 `sid`，session store 使用 `better-sqlite3-session-store`。
+- `src/types/express-session.d.ts` 擴充 `SessionData`，加入 `userId` 欄位。這是對既有 `express-session` 型別的模組擴充。
+- `src/types/better-sqlite3-session-store.d.ts` 為沒有附 TypeScript 宣告的 session store 套件提供型別。它必須維持獨立的環境模組宣告檔。
+- Session store 會在資料庫中建立 `sessions` 表，並定期清除過期 session。
 
-- `express-session` 管理登入 session，cookie 名稱為 `sid`。
-- cookie 設定為 `httpOnly`、`sameSite: 'lax'`，有效期限為七天；目前 `secure: false`，供本機 HTTP 使用。
-- 成功登入後，使用者 ID 存入 `req.session.userId`。
-- `better-sqlite3-session-store` 將 session 記錄存入 SQLite 的 `sessions` 表。
-- `authMiddleware` 會檢查 `req.session.userId`。目前它略過整個 `/api/auth` 前綴，因此此路徑下的所有操作都不會被 session 保護；調整刪除使用者等操作前，應先確認預期的權限規則。
-- Session secret 目前寫在 `src/index.ts`；部署正式環境前應改由環境變數提供，並設定安全的 cookie 選項。
+## SQLite 資料庫
 
-## SQLite
+Compose 設定 `DB_PATH=/data/app.db`，並將 named volume `dbdata` 掛載至 `/data`。首次啟動時 Docker 會自動建立 named volume，SQLite 會建立資料庫檔案；`src/utils/db.ts` 會建立目錄、設定 WAL，並以 `CREATE TABLE IF NOT EXISTS` 初始化 `users` 表。因此目前設定不需要事先建立資料庫檔案或資料表。若改用主機 bind mount，請先建立並確認主機端的掛載目錄存在；SQLite 仍會在該目錄中建立資料庫檔案。
 
-資料庫路徑由 `DB_PATH` 環境變數指定；未設定時使用工作目錄下的 `app.db`。Compose 將它設為 `/data/app.db`，並以 named volume `dbdata:/data` 保存資料。重新建立容器時，named volume 會保留資料；`docker compose down -v` 則會刪除該 volume。
-
-`src/utils/db.ts` 啟動時會設定 WAL 模式，並以 `CREATE TABLE IF NOT EXISTS` 建立 `users` 表：
-
-| 欄位 | 用途 |
+| 欄位 | 說明 |
 | --- | --- |
-| `id` | 自動遞增主鍵 |
-| `username` | 唯一使用者名稱 |
-| `password_hash` | bcrypt 密碼雜湊 |
+| `id` | 自動遞增的使用者 ID |
+| `username` | 唯一的使用者名稱 |
+| `password_hash` | bcrypt 密碼雜湊，不存放明文密碼 |
 | `created_at` | 建立時間 |
 
-若需查看容器內的使用者資料，可執行：
+查看使用者清單（不會讀取密碼雜湊）：
 
 ```powershell
-docker compose exec -T backend node -e "const D=require('better-sqlite3');const d=new D('/data/app.db',{readonly:true});console.log(d.prepare('SELECT id, username, created_at FROM users').all())"
+docker compose exec -T backend node -e "const Database=require('better-sqlite3');const db=new Database('/data/app.db',{readonly:true});console.log(db.prepare('SELECT id,username,created_at FROM users').all())"
 ```
+
+單筆 SQL 寫入由 SQLite 原子執行。若新增功能需要多筆資料庫操作一起成功或失敗，請使用 `better-sqlite3` 的 `db.transaction(...)`。
+
+Named volume 會在容器重建後保留資料。`docker compose down -v` 會刪除 Compose 管理的 volume，請勿在需要保留資料時使用。
+
+參考文件：[better-sqlite3 API](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md)、[better-sqlite3 效能與 WAL](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md)、[Docker volumes](https://docs.docker.com/engine/storage/volumes/)、[Express session](https://expressjs.com/en/resources/middleware/session.html)。
 
 ## Logging
 
-Logger 使用 `pino-http`，等級由 `LOG_LEVEL` 設定，預設為 `info`。容器日誌輸出到 stdout，可用 `docker compose logs -f backend` 查看。
+後端使用 `pino-http` 記錄請求，Compose 預設 `LOG_LEVEL=info`。查看即時日誌：
+
+```powershell
+docker compose logs -f backend
+```
