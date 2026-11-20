@@ -35,6 +35,6 @@ export async function login(req: Request<{}, {}, LoginRequestBody>, res: Respons
 export async function logout(req: Request, res: Response): Promise<any> {
     req.session.destroy(() => {
         res.clearCookie('sid');
-        return res.status(204);
+        return res.status(204).end();
     });
 }
