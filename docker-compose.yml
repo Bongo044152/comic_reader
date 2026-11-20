@@ -3,7 +3,8 @@ services:
     build: ./backend
     image: comic-backend
     ports:
-      - "5090:5090" # host:container, the container side must match environment.PORT
+      - "5090:5090" # environment.PORT
+      - "127.0.0.1:4096:4096" # loopback only; environment.ADMIN_PORT
     user: "1000:1000"
 
     # see: https://docs.docker.com/reference/compose-file/services/#logging
@@ -13,8 +14,10 @@ services:
         max-size: "25m"
     environment:
       DB_PATH: "/data/app.db"
-      PORT: "5090" # port the backend listens on inside the container (default: 5090)
-      LOG_LEVEL: "info" # backend logging level (default: info): https://getpino.io/#/docs/api?id=loggerlevel-string-gettersetter
+      PORT: "5090" # port the backend listens on
+      ADMIN_PORT: "4096" # admin server port inside the container
+      LOG_LEVEL: "info" # backend logging level: https://getpino.io/#/docs/api?id=loggerlevel-string-gettersetter
+      SESSION_SECRET: "${SESSION_SECRET:?SESSION_SECRET is required}" # read from the shell or .env
     volumes:
       # Docker creates this named volume on first start; SQLite creates app.db.
       - dbdata:/data

@@ -5,6 +5,7 @@ const router = Router();
 
 router.post('/login',
     /* #swagger.tags = ['Auth']
+        #swagger.path = '/api/auth/login'
         #swagger.summary = '登入'
         #swagger.requestBody = {
             required: true,
@@ -27,6 +28,7 @@ router.post('/login',
 router.post('/logout',
     /*
         #swagger.tags = ['Auth']
+        #swagger.path = '/api/auth/logout'
         #swagger.summary = '登出'
     */
     logout

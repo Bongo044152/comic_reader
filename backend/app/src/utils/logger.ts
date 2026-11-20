@@ -1,4 +1,5 @@
 import { pinoHttp } from 'pino-http';
+import { requireEnv } from './env.js';
 
 /*
     The default logger of this application.
@@ -6,7 +7,7 @@ import { pinoHttp } from 'pino-http';
 */
 // docs: https://www.npmjs.com/package/pino-http#api
 const logger = pinoHttp({
-    level: process.env.LOG_LEVEL || "info",
+    level: requireEnv('LOG_LEVEL'),
     formatters: {
         level: (level) => {
             return {level: level.toUpperCase()}
@@ -14,8 +15,16 @@ const logger = pinoHttp({
     },
     /* temporary set below */
     autoLogging: false,
-    quietReqLogger: true,
     quietResLogger: true,
+    serializers: {
+        req: (req) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+            ip: req.raw.ip,
+            userId: req.raw.session?.userId,
+        }),
+    },
 });
 
 export default logger;

@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import logger from '../utils/logger.js';
 import { get } from '../utils/db.js';
 import type { LoginRequestBody, User } from '../types/interface.js'
 
@@ -26,7 +25,7 @@ export async function login(req: Request<{}, {}, LoginRequestBody>, res: Respons
         });
     }
     catch (error) {
-        logger.logger.error(error);
+        req.log.error(error);
         return res.status(500).json({ error: '伺服器錯誤' });
     }
 }
